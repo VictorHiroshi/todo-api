@@ -1,0 +1,72 @@
+name: Code checks
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    branches: [main]
+  workflow_dispatch:  # Allows manual triggering from the GitHub UI
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Set up Python
+        run: uv python install
+
+      # Install Python dependencies and create environment
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
+
+      - name: Run Pyrefly Type Checker
+        run: uvx pyrefly check --output-format=github
+  
+  run-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+
+    env:
+      DATABASE_URL: "postgresql+asyncpg://test:test@localhost:5432/testdb"
+      APP_ENV: "development"
+      DEBUG: "false"
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Set up Python
+        run: uv python install
+
+      # Install Python dependencies and create environment
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
+
+      - name: Run tests
+        run: uv run --group dev pytest --maxfail=1 --disable-warnings -q --cov=todo_api --cov-report=term-missing
+
+      - name: Generate coverage comment
+        id: coverage_comment
+        if: github.event_name == 'pull_request'
+        uses: py-cov-action/python-coverage-comment-action@5d8df5979747514c914e1c5a12335a7cf9a2745f # v4.1
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Upload coverage comment for forked PRs
+        if: steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: python-coverage-comment-action
+          path: python-coverage-comment-action.txt
