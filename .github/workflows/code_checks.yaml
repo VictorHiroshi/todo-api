@@ -34,6 +34,11 @@ jobs:
       pull-requests: write
       contents: write
 
+    env:
+      DATABASE_URL: "postgresql+asyncpg://test:test@localhost:5432/testdb"
+      APP_ENV: "development"
+      DEBUG: "false"
+
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
