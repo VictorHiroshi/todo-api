@@ -14,9 +14,7 @@ class Settings(BaseSettings):
     )
 
     database_url: str = Field(alias="DATABASE_URL")
-    app_env: Literal["development", "staging", "production"] = Field(
-        default="development", alias="APP_ENV"
-    )
+    app_env: Literal["development", "staging", "production"] = Field(default="development", alias="APP_ENV")
     debug: bool = Field(default=False, alias="DEBUG")
 
 
