@@ -25,6 +25,6 @@ async def test_multiple_tasks_are_persisted(integration_client):
     assert response.status_code == 200
     tasks = response.json()
     assert len(tasks) >= 2
-    titles = [t["title"] for t in tasks]
+    titles = [t["title"] for t in tasks["items"]]
     assert "Tarefa 1" in titles
     assert "Tarefa 2" in titles
