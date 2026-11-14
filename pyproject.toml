@@ -33,6 +33,7 @@ dev = [
     "pytest-asyncio>=1.5.0",
     "pytest-cov>=7.1.0",
     "ruff>=0.17.4",
+    "testcontainers[postgres]>=4.15.0",
 ]
 
 [tool.ruff]
@@ -78,6 +79,7 @@ search-path = ["src"]
 pythonpath = ["src"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"  # evita warnings de loop
 
 [tool.coverage.run]
 relative_files = true
