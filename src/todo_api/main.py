@@ -2,14 +2,15 @@ import base64
 import binascii
 import json
 from datetime import datetime
+from typing import Annotated
 
-from fastapi import FastAPI, HTTPException, Query, status
+from fastapi import Body, FastAPI, HTTPException, Path, Query, status
 from sqlalchemy import func, select
 
 from todo_api.config import get_settings
 from todo_api.db import SessionDep
 from todo_api.models import Task
-from todo_api.schemas import CursorPage, Page, TaskCreate, TaskResponse
+from todo_api.schemas import CursorPage, Page, TaskCreate, TaskResponse, TaskUpdate
 
 settings = get_settings()
 
@@ -111,3 +112,58 @@ async def list_tasks_cursor(
         items=[TaskResponse.model_validate(t) for t in tasks],
         next_cursor=next_cursor,
     )
+
+
+@app.get(
+    "/tasks/{task_id}",
+    response_model=TaskResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["tasks"],
+)
+async def get_task(session: SessionDep, task_id: int = Path(description="ID da tarefa")) -> TaskResponse:
+    stmt = select(Task).where(Task.id == task_id)
+    result = await session.scalar(stmt)
+    if not result:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarefa não encontrada")
+    return TaskResponse.model_validate(result)
+
+
+@app.put(
+    "/tasks/{task_id}",
+    response_model=TaskResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["tasks"],
+)
+async def update_task(
+    session: SessionDep,
+    task_data: Annotated[TaskUpdate, Body()],
+    task_id: int = Path(description="ID da tarefa"),
+) -> TaskResponse:
+    stmt = select(Task).where(Task.id == task_id)
+    result = await session.scalar(stmt)
+    if not result:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarefa não encontrada")
+    for key, value in task_data.model_dump(exclude_unset=True).items():
+        setattr(result, key, value)
+    await session.commit()
+    await session.refresh(result)
+    return TaskResponse.model_validate(result)
+
+
+@app.delete(
+    "/tasks/{task_id}",
+    response_model=TaskResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["tasks"],
+)
+async def delete_task(
+    session: SessionDep,
+    task_id: int = Path(description="ID da tarefa"),
+) -> TaskResponse:
+    stmt = select(Task).where(Task.id == task_id)
+    result = await session.scalar(stmt)
+    if not result:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarefa não encontrada")
+    await session.delete(result)
+    await session.commit()
+    return TaskResponse.model_validate(result)

@@ -213,3 +213,80 @@ async def test_cursor_rejects_json_without_id(client):
     payload = base64.urlsafe_b64encode(json.dumps({"foo": 1}).encode()).decode()
     response = await client.get(f"/tasks/cursor?cursor={payload}")
     assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_get_task_returns_task(client):
+    created = await client.post("/tasks", json={"title": "Tarefa individual"})
+    assert created.status_code == 201
+
+    response = await client.get("/tasks/1")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == 1
+    assert data["title"] == "Tarefa individual"
+    assert data["done"] is False
+
+
+@pytest.mark.asyncio
+async def test_get_task_returns_404_for_missing_id(client):
+    response = await client.get("/tasks/999")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Tarefa não encontrada"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("payload", "expected"),
+    [
+        (
+            {"title": "Depois", "description": "Descrição atualizada", "done": True},
+            {"title": "Depois", "description": "Descrição atualizada", "done": True},
+        ),
+        (
+            {"title": "Título atualizado"},
+            {"title": "Título atualizado", "description": "Descrição original", "done": False},
+        ),
+        (
+            {"description": "Descrição atualizada"},
+            {"title": "Antes", "description": "Descrição atualizada", "done": False},
+        ),
+        (
+            {"done": True},
+            {"title": "Antes", "description": "Descrição original", "done": True},
+        ),
+    ],
+)
+async def test_update_task_updates_fields(client, payload, expected):
+    created = await client.post(
+        "/tasks",
+        json={"title": "Antes", "description": "Descrição original"},
+    )
+    assert created.status_code == 201
+
+    response = await client.put("/tasks/1", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == 1
+    assert data["title"] == expected["title"]
+    assert data["description"] == expected["description"]
+    assert data["done"] is expected["done"]
+
+    missing = await client.put("/tasks/999", json=payload)
+    assert missing.status_code == 404
+    assert missing.json()["detail"] == "Tarefa não encontrada"
+
+
+@pytest.mark.asyncio
+async def test_delete_task_removes_task(client):
+    created = await client.post("/tasks", json={"title": "Para deletar"})
+    assert created.status_code == 201
+
+    response = await client.delete("/tasks/1")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == 1
+    assert data["title"] == "Para deletar"
+
+    missing = await client.get("/tasks/1")
+    assert missing.status_code == 404
