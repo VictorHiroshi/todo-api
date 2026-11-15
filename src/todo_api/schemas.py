@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -17,9 +17,7 @@ class TaskCreate(TaskBase):
 class TaskUpdate(BaseModel):
     """Payload para atualização parcial — todos os campos opcionais."""
 
-    title: Annotated[str | None, Field(default=None, min_length=1, max_length=120)] = (
-        None
-    )
+    title: Annotated[str | None, Field(default=None, min_length=1, max_length=120)] = None
     description: Annotated[str | None, Field(default=None, max_length=1000)] = None
     done: bool | None = None
 
@@ -30,3 +28,18 @@ class TaskResponse(TaskBase):
     id: int
     created_at: datetime
     updated_at: datetime
+
+
+T = TypeVar("T")
+
+
+class Page(BaseModel, Generic[T]):
+    items: list[T]
+    total: int
+    limit: int
+    offset: int
+
+
+class CursorPage(BaseModel, Generic[T]):
+    items: list[T]
+    next_cursor: str | None = None
