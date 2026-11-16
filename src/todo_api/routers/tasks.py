@@ -4,12 +4,13 @@ import json
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Request, status
 from sqlalchemy import func, select
 
 from todo_api.db import SessionDep
 from todo_api.dependencies import get_current_user
 from todo_api.models import Task, User
+from todo_api.rate_limit import limiter
 from todo_api.schemas import CursorPage, Page, TaskCreate, TaskResponse, TaskUpdate
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -20,8 +21,12 @@ router = APIRouter(prefix="/tasks", tags=["tasks"])
     response_model=TaskResponse,
     status_code=status.HTTP_201_CREATED,
 )
+@limiter.limit("10/minute")  # Exemplo de limite por rota
 async def create_task(
-    payload: TaskCreate, session: SessionDep, current_user: Annotated[User, Depends(get_current_user)]
+    request: Request,  # <-- nome exato, tipo Request,
+    payload: TaskCreate,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(get_current_user)],
 ) -> Task:
     task = Task(**payload.model_dump())
     session.add(task)

@@ -2,10 +2,13 @@ import uuid
 
 import structlog
 from fastapi import FastAPI
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIASGIMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from todo_api.config import get_settings
 from todo_api.logging_config import configure_logging
+from todo_api.rate_limit import limiter, rate_limit_exceeded_handler
 from todo_api.routers import auth, health, tasks
 
 settings = get_settings()
@@ -32,9 +35,14 @@ app = FastAPI(
     description="API de tarefas para revisão de FastAPI + Pydantic + SQLAlchemy async + Alembic.",
 )
 
+app.state.limiter = limiter
+
 configure_logging(debug=settings.debug)
 app.add_middleware(RequestContextMiddleware)
 
 app.include_router(auth.router)
 app.include_router(health.router)
 app.include_router(tasks.router)
+
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIASGIMiddleware)

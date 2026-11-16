@@ -112,3 +112,18 @@ async def integration_client(integration_session: AsyncSession):
 async def authenticated_integration_client(integration_client: AsyncClient):
     await authenticate(integration_client)
     return integration_client
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    """
+    Reseta o estado do limiter do SlowAPI antes de cada teste
+    para garantir que os contadores não vazem entre os testes.
+    """
+    from todo_api.rate_limit import limiter
+
+    limiter.reset()
+    yield
+    # Opcional: resetar no teardown também, para garantir que um teste
+    # que estourou o limite não afete o próximo arquivo de teste.
+    limiter.reset()
