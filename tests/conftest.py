@@ -41,6 +41,22 @@ async def client(db_session: AsyncSession):
     app.dependency_overrides.clear()
 
 
+async def authenticate(client: AsyncClient) -> None:
+    email = "tasks@example.com"
+    password = "password123"
+    response = await client.post("/auth/register", json={"email": email, "password": password})
+    response.raise_for_status()
+    response = await client.post("/auth/login", data={"username": email, "password": password})
+    response.raise_for_status()
+    client.headers["Authorization"] = f"Bearer {response.json()['access_token']}"
+
+
+@pytest.fixture
+async def authenticated_client(client: AsyncClient):
+    await authenticate(client)
+    return client
+
+
 # ---------- Fixture do container PostgreSQL (session-scoped) ----------
 @pytest.fixture(scope="session")
 def postgres_container():
@@ -90,3 +106,24 @@ async def integration_client(integration_session: AsyncSession):
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture(loop_scope="session")
+async def authenticated_integration_client(integration_client: AsyncClient):
+    await authenticate(integration_client)
+    return integration_client
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    """
+    Reseta o estado do limiter do SlowAPI antes de cada teste
+    para garantir que os contadores não vazem entre os testes.
+    """
+    from todo_api.rate_limit import limiter
+
+    limiter.reset()
+    yield
+    # Opcional: resetar no teardown também, para garantir que um teste
+    # que estourou o limite não afete o próximo arquivo de teste.
+    limiter.reset()

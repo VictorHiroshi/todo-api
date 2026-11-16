@@ -24,6 +24,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://todo:todo@db:5432/tododb
       APP_ENV: development
       DEBUG: "true"
+      JWT_SECRET_KEY: a643bcdb3f61a07c3bf15db86aef9633a46d52189e8b25d3b1e6776e2564e241
     depends_on:
       db:
         condition: service_healthy

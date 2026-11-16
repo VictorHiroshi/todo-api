@@ -2,18 +2,9 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_health_returns_ok(client):
-    response = await client.get("/health")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "ok"
-    assert data["env"] == "development"
-
-
-@pytest.mark.asyncio
-async def test_create_task_persists(client):
+async def test_create_task_persists(authenticated_client):
     payload = {"title": "Revisar SQLAlchemy async", "description": "Dia 2"}
-    response = await client.post("/tasks", json=payload)
+    response = await authenticated_client.post("/tasks", json=payload)
 
     assert response.status_code == 201
     data = response.json()
@@ -25,27 +16,27 @@ async def test_create_task_persists(client):
 
 
 @pytest.mark.asyncio
-async def test_create_task_rejects_empty_title(client):
-    response = await client.post("/tasks", json={"title": ""})
+async def test_create_task_rejects_empty_title(authenticated_client):
+    response = await authenticated_client.post("/tasks", json={"title": ""})
     assert response.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_list_tasks_empty(client):
-    response = await client.get("/tasks")
+async def test_list_tasks_empty(authenticated_client):
+    response = await authenticated_client.get("/tasks")
     assert response.status_code == 200
     data = response.json()
     assert data == {"items": [], "total": 0, "limit": 10, "offset": 0}
 
 
 @pytest.mark.asyncio
-async def test_list_tasks_with_pagination(client):
+async def test_list_tasks_with_pagination(authenticated_client):
     # Cria 3 tarefas
     for i in range(3):
-        await client.post("/tasks", json={"title": f"Tarefa {i}"})
+        await authenticated_client.post("/tasks", json={"title": f"Tarefa {i}"})
 
     # Primeira página
-    response = await client.get("/tasks?limit=2&offset=0")
+    response = await authenticated_client.get("/tasks?limit=2&offset=0")
     data = response.json()
     assert data["total"] == 3
     assert data["limit"] == 2
@@ -55,51 +46,51 @@ async def test_list_tasks_with_pagination(client):
     assert data["items"][0]["title"] == "Tarefa 2"
 
     # Segunda página
-    response = await client.get("/tasks?limit=2&offset=2")
+    response = await authenticated_client.get("/tasks?limit=2&offset=2")
     data = response.json()
     assert len(data["items"]) == 1
     assert data["items"][0]["title"] == "Tarefa 0"
 
 
 @pytest.mark.asyncio
-async def test_list_tasks_rejects_invalid_limit(client):
-    response = await client.get("/tasks?limit=0")
+async def test_list_tasks_rejects_invalid_limit(authenticated_client):
+    response = await authenticated_client.get("/tasks?limit=0")
     assert response.status_code == 422
 
-    response = await client.get("/tasks?limit=101")
+    response = await authenticated_client.get("/tasks?limit=101")
     assert response.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_list_tasks_rejects_negative_offset(client):
-    response = await client.get("/tasks?offset=-1")
+async def test_list_tasks_rejects_negative_offset(authenticated_client):
+    response = await authenticated_client.get("/tasks?offset=-1")
     assert response.status_code == 422
 
 
-async def _create_tasks(client, n: int) -> list[dict]:
+async def _create_tasks(authenticated_client, n: int) -> list[dict]:
     """Helper: cria N tarefas e retorna a lista de respostas."""
     created = []
     for i in range(n):
-        r = await client.post("/tasks", json={"title": f"Tarefa {i}"})
+        r = await authenticated_client.post("/tasks", json={"title": f"Tarefa {i}"})
         assert r.status_code == 201
         created.append(r.json())
     return created
 
 
 @pytest.mark.asyncio
-async def test_cursor_empty(client):
-    response = await client.get("/tasks/cursor")
+async def test_cursor_empty(authenticated_client):
+    response = await authenticated_client.get("/tasks/cursor")
     assert response.status_code == 200
     data = response.json()
     assert data == {"items": [], "next_cursor": None}
 
 
 @pytest.mark.asyncio
-async def test_cursor_first_page_returns_limit_plus_one_check(client):
+async def test_cursor_first_page_returns_limit_plus_one_check(authenticated_client):
     """Com 3 tarefas e limit=2, a primeira página deve ter 2 itens e next_cursor != None."""
-    await _create_tasks(client, 3)
+    await _create_tasks(authenticated_client, 3)
 
-    response = await client.get("/tasks/cursor?limit=2")
+    response = await authenticated_client.get("/tasks/cursor?limit=2")
     assert response.status_code == 200
     data = response.json()
     assert len(data["items"]) == 2
@@ -107,9 +98,9 @@ async def test_cursor_first_page_returns_limit_plus_one_check(client):
 
 
 @pytest.mark.asyncio
-async def test_cursor_pagination_walks_all_items(client):
+async def test_cursor_pagination_walks_all_items(authenticated_client):
     """Percorre todas as páginas e verifica que nenhum item é repetido ou perdido."""
-    created = await _create_tasks(client, 5)
+    created = await _create_tasks(authenticated_client, 5)
     expected_titles = {t["title"] for t in created}
 
     seen_titles: set[str] = set()
@@ -120,7 +111,7 @@ async def test_cursor_pagination_walks_all_items(client):
         url = "/tasks/cursor?limit=2"
         if cursor:
             url += f"&cursor={cursor}"
-        response = await client.get(url)
+        response = await authenticated_client.get(url)
         assert response.status_code == 200
         data = response.json()
 
@@ -139,35 +130,35 @@ async def test_cursor_pagination_walks_all_items(client):
 
 
 @pytest.mark.asyncio
-async def test_cursor_last_page_has_no_next_cursor(client):
+async def test_cursor_last_page_has_no_next_cursor(authenticated_client):
     """A última página deve retornar next_cursor=None."""
-    await _create_tasks(client, 2)
+    await _create_tasks(authenticated_client, 2)
 
-    response = await client.get("/tasks/cursor?limit=2")
+    response = await authenticated_client.get("/tasks/cursor?limit=2")
     data = response.json()
     assert len(data["items"]) == 2
     assert data["next_cursor"] is None
 
 
 @pytest.mark.asyncio
-async def test_cursor_is_stable_under_inserts(client):
+async def test_cursor_is_stable_under_inserts(authenticated_client):
     """
     O teste que diferencia cursor de offset:
     inserir um item novo entre páginas NÃO deve causar duplicata.
     """
-    await _create_tasks(client, 3)
+    await _create_tasks(authenticated_client, 3)
 
     # Página 1
-    r1 = await client.get("/tasks/cursor?limit=2")
+    r1 = await authenticated_client.get("/tasks/cursor?limit=2")
     page1 = r1.json()
     page1_ids = {i["id"] for i in page1["items"]}
     assert len(page1_ids) == 2
 
     # Insere uma tarefa nova (que apareceria no topo da ordenação desc)
-    await client.post("/tasks", json={"title": "Intrusa"})
+    await authenticated_client.post("/tasks", json={"title": "Intrusa"})
 
     # Página 2 usando o cursor da página 1
-    r2 = await client.get(f"/tasks/cursor?limit=2&cursor={page1['next_cursor']}")
+    r2 = await authenticated_client.get(f"/tasks/cursor?limit=2&cursor={page1['next_cursor']}")
     page2 = r2.json()
     page2_ids = {i["id"] for i in page2["items"]}
 
@@ -176,18 +167,18 @@ async def test_cursor_is_stable_under_inserts(client):
 
 
 @pytest.mark.asyncio
-async def test_cursor_rejects_invalid_limit(client):
-    response = await client.get("/tasks/cursor?limit=0")
+async def test_cursor_rejects_invalid_limit(authenticated_client):
+    response = await authenticated_client.get("/tasks/cursor?limit=0")
     assert response.status_code == 422
 
-    response = await client.get("/tasks/cursor?limit=101")
+    response = await authenticated_client.get("/tasks/cursor?limit=101")
     assert response.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_cursor_rejects_malformed_cursor(client):
+async def test_cursor_rejects_malformed_cursor(authenticated_client):
     """Cursor inválido deve retornar erro claro, não 500."""
-    response = await client.get("/tasks/cursor?cursor=not-a-valid-cursor")
+    response = await authenticated_client.get("/tasks/cursor?cursor=not-a-valid-cursor")
     # A implementação atual lança exceção no _decode_cursor.
     # Se você ainda não tratou, este teste documenta o comportamento atual.
     assert response.status_code == 400
@@ -195,32 +186,32 @@ async def test_cursor_rejects_malformed_cursor(client):
 
 
 @pytest.mark.asyncio
-async def test_cursor_rejects_valid_base64_but_invalid_json(client):
+async def test_cursor_rejects_valid_base64_but_invalid_json(authenticated_client):
     """Base64 válido, mas conteúdo não é JSON."""
     import base64
 
     invalid = base64.urlsafe_b64encode(b"not json").decode()
-    response = await client.get(f"/tasks/cursor?cursor={invalid}")
+    response = await authenticated_client.get(f"/tasks/cursor?cursor={invalid}")
     assert response.status_code == 400
 
 
 @pytest.mark.asyncio
-async def test_cursor_rejects_json_without_id(client):
+async def test_cursor_rejects_json_without_id(authenticated_client):
     """JSON válido, mas sem a chave 'id'."""
     import base64
     import json
 
     payload = base64.urlsafe_b64encode(json.dumps({"foo": 1}).encode()).decode()
-    response = await client.get(f"/tasks/cursor?cursor={payload}")
+    response = await authenticated_client.get(f"/tasks/cursor?cursor={payload}")
     assert response.status_code == 400
 
 
 @pytest.mark.asyncio
-async def test_get_task_returns_task(client):
-    created = await client.post("/tasks", json={"title": "Tarefa individual"})
+async def test_get_task_returns_task(authenticated_client):
+    created = await authenticated_client.post("/tasks", json={"title": "Tarefa individual"})
     assert created.status_code == 201
 
-    response = await client.get("/tasks/1")
+    response = await authenticated_client.get("/tasks/1")
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == 1
@@ -229,8 +220,8 @@ async def test_get_task_returns_task(client):
 
 
 @pytest.mark.asyncio
-async def test_get_task_returns_404_for_missing_id(client):
-    response = await client.get("/tasks/999")
+async def test_get_task_returns_404_for_missing_id(authenticated_client):
+    response = await authenticated_client.get("/tasks/999")
     assert response.status_code == 404
     assert response.json()["detail"] == "Tarefa não encontrada"
 
@@ -257,14 +248,14 @@ async def test_get_task_returns_404_for_missing_id(client):
         ),
     ],
 )
-async def test_update_task_updates_fields(client, payload, expected):
-    created = await client.post(
+async def test_update_task_updates_fields(authenticated_client, payload, expected):
+    created = await authenticated_client.post(
         "/tasks",
         json={"title": "Antes", "description": "Descrição original"},
     )
     assert created.status_code == 201
 
-    response = await client.put("/tasks/1", json=payload)
+    response = await authenticated_client.put("/tasks/1", json=payload)
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == 1
@@ -272,21 +263,21 @@ async def test_update_task_updates_fields(client, payload, expected):
     assert data["description"] == expected["description"]
     assert data["done"] is expected["done"]
 
-    missing = await client.put("/tasks/999", json=payload)
+    missing = await authenticated_client.put("/tasks/999", json=payload)
     assert missing.status_code == 404
     assert missing.json()["detail"] == "Tarefa não encontrada"
 
 
 @pytest.mark.asyncio
-async def test_delete_task_removes_task(client):
-    created = await client.post("/tasks", json={"title": "Para deletar"})
+async def test_delete_task_removes_task(authenticated_client):
+    created = await authenticated_client.post("/tasks", json={"title": "Para deletar"})
     assert created.status_code == 201
 
-    response = await client.delete("/tasks/1")
+    response = await authenticated_client.delete("/tasks/1")
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == 1
     assert data["title"] == "Para deletar"
 
-    missing = await client.get("/tasks/1")
+    missing = await authenticated_client.get("/tasks/1")
     assert missing.status_code == 404
