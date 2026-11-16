@@ -24,6 +24,12 @@ jobs:
       # Install Python dependencies and create environment
       - name: Install the project
         run: uv sync --locked --all-extras --dev
+      
+      - name: Lint with Ruff
+        run: uv run ruff check .
+      
+      - name: Check formatting with Ruff
+        run: uv run ruff format --check .
 
       - name: Run Pyrefly Type Checker
         run: uvx pyrefly check --output-format=github
@@ -38,6 +44,7 @@ jobs:
       DATABASE_URL: "postgresql+asyncpg://test:test@localhost:5432/testdb"
       APP_ENV: "development"
       DEBUG: "false"
+      JWT_SECRET_KEY: "test-secret-key"
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

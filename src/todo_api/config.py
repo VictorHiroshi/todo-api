@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     database_url: str = Field(alias="DATABASE_URL")
     app_env: Literal["development", "staging", "production"] = Field(default="development", alias="APP_ENV")
     debug: bool = Field(default=False, alias="DEBUG")
+    jwt_secret_key: str = Field(alias="JWT_SECRET_KEY")
+    jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
+    access_token_expire_minutes: int = Field(default=30, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
 
 
 @lru_cache
