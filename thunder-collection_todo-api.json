@@ -1,0 +1,237 @@
+{
+    "clientName": "Thunder Client",
+    "collectionName": "todo-api",
+    "collectionId": "101c7b51-f2cf-408c-a5eb-f020b0dfb4ca",
+    "dateExported": "2026-11-16T19:05:04.901Z",
+    "version": "1.4",
+    "folders": [
+        {
+            "_id": "80cb5ad8-c00b-4991-ac20-27c7e7e9bc83",
+            "name": "infra",
+            "containerId": "",
+            "created": "2026-11-16T18:41:08.912Z",
+            "sortNum": 10000
+        },
+        {
+            "_id": "5a57cc7e-92af-462f-95e8-ed3ca518b50d",
+            "name": "auth",
+            "containerId": "",
+            "created": "2026-11-16T18:41:43.255Z",
+            "sortNum": 20000
+        },
+        {
+            "_id": "f1ae8cda-0e95-451d-bea0-71326abee01d",
+            "name": "tasks",
+            "containerId": "",
+            "created": "2026-11-16T18:47:59.103Z",
+            "sortNum": 30000
+        }
+    ],
+    "requests": [
+        {
+            "_id": "1b2c23fa-f6b5-45b4-b9f9-34239aacdcb3",
+            "colId": "101c7b51-f2cf-408c-a5eb-f020b0dfb4ca",
+            "containerId": "5a57cc7e-92af-462f-95e8-ed3ca518b50d",
+            "name": "Login",
+            "url": "http://127.0.0.1:8000/auth/login",
+            "method": "POST",
+            "sortNum": 10000,
+            "created": "2026-11-16T18:31:48.190Z",
+            "modified": "2026-11-16T18:31:48.190Z",
+            "headers": []
+        },
+        {
+            "_id": "22f596d3-08e6-4a29-a9d9-896c08580fb2",
+            "colId": "101c7b51-f2cf-408c-a5eb-f020b0dfb4ca",
+            "containerId": "80cb5ad8-c00b-4991-ac20-27c7e7e9bc83",
+            "name": "Health",
+            "url": "http://127.0.0.1:8000/health",
+            "method": "GET",
+            "sortNum": 10000,
+            "created": "2026-11-16T18:31:57.512Z",
+            "modified": "2026-11-16T18:31:57.512Z",
+            "headers": []
+        },
+        {
+            "_id": "4c2a957e-9809-4d57-a8d4-bedec14a21fd",
+            "colId": "101c7b51-f2cf-408c-a5eb-f020b0dfb4ca",
+            "containerId": "5a57cc7e-92af-462f-95e8-ed3ca518b50d",
+            "name": "Register",
+            "url": "{{base_url}}/auth/register",
+            "method": "POST",
+            "sortNum": 20000,
+            "created": "2026-11-16T18:41:56.001Z",
+            "modified": "2026-11-16T18:41:56.001Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": [
+                    "{",
+                    "  \"email\":\"{{user_name}}\",",
+                    "  \"password\":\"{{password}}\"",
+                    "}"
+                ],
+                "form": []
+            }
+        },
+        {
+            "_id": "6c05a63d-7a13-4105-aabc-c2852be6c4e6",
+            "colId": "101c7b51-f2cf-408c-a5eb-f020b0dfb4ca",
+            "containerId": "5a57cc7e-92af-462f-95e8-ed3ca518b50d",
+            "name": "Me",
+            "url": "{{base_url}}/auth/me",
+            "method": "GET",
+            "sortNum": 30000,
+            "created": "2026-11-16T18:46:33.692Z",
+            "modified": "2026-11-16T18:46:33.692Z",
+            "headers": [],
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{token}}"
+            }
+        },
+        {
+            "_id": "7348d067-5f16-4318-b26c-c430a98593ca",
+            "colId": "101c7b51-f2cf-408c-a5eb-f020b0dfb4ca",
+            "containerId": "f1ae8cda-0e95-451d-bea0-71326abee01d",
+            "name": "All tasks (offset)",
+            "url": "{{base_url}}/tasks?limit=5&offset=0",
+            "method": "GET",
+            "sortNum": 40000,
+            "created": "2026-11-16T18:48:12.381Z",
+            "modified": "2026-11-16T18:48:12.381Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "limit",
+                    "value": "5",
+                    "isPath": false
+                },
+                {
+                    "name": "offset",
+                    "value": "0",
+                    "isPath": false
+                }
+            ],
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{token}}"
+            }
+        },
+        {
+            "_id": "43f367a1-6525-4b25-bdda-fc78a51ebb8b",
+            "colId": "101c7b51-f2cf-408c-a5eb-f020b0dfb4ca",
+            "containerId": "f1ae8cda-0e95-451d-bea0-71326abee01d",
+            "name": "Create task",
+            "url": "{{base_url}}/tasks",
+            "method": "POST",
+            "sortNum": 50000,
+            "created": "2026-11-16T18:49:07.592Z",
+            "modified": "2026-11-16T18:49:07.592Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": [
+                    "{",
+                    "  \"title\":\"14\",",
+                    "  \"description\":\"ops\",",
+                    "  \"done\": true",
+                    "}"
+                ],
+                "form": []
+            },
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{token}}"
+            }
+        },
+        {
+            "_id": "32d37f01-c137-4eac-b5ce-23f50937948b",
+            "colId": "101c7b51-f2cf-408c-a5eb-f020b0dfb4ca",
+            "containerId": "f1ae8cda-0e95-451d-bea0-71326abee01d",
+            "name": "One task",
+            "url": "{{base_url}}/tasks/7",
+            "method": "GET",
+            "sortNum": 50000,
+            "created": "2026-11-16T18:51:37.643Z",
+            "modified": "2026-11-16T18:51:37.643Z",
+            "headers": [],
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{token}}"
+            }
+        },
+        {
+            "_id": "2ae3bedc-2786-4868-ba30-aeccf10da302",
+            "colId": "101c7b51-f2cf-408c-a5eb-f020b0dfb4ca",
+            "containerId": "f1ae8cda-0e95-451d-bea0-71326abee01d",
+            "name": "All tasks (cursor)",
+            "url": "{{base_url}}/tasks/cursor?limit=3&cursor=\"eyJjcmVhdGVkX2F0IjogIjIwMjYtMTEtMTZUMTg6NTY6MjIuOTg5NTc1KzAwOjAwIiwgImlkIjogM30=\"",
+            "method": "GET",
+            "sortNum": 50000,
+            "created": "2026-11-16T18:55:03.699Z",
+            "modified": "2026-11-16T18:55:03.699Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "limit",
+                    "value": "3",
+                    "isPath": false
+                },
+                {
+                    "name": "cursor",
+                    "value": "\"eyJjcmVhdGVkX2F0IjogIjIwMjYtMTEtMTZUMTg6NTY6MjIuOTg5NTc1KzAwOjAwIiwgImlkIjogM30=\"",
+                    "isPath": false
+                }
+            ],
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{token}}"
+            }
+        },
+        {
+            "_id": "48510569-8c56-4396-961a-06dd43d02120",
+            "colId": "101c7b51-f2cf-408c-a5eb-f020b0dfb4ca",
+            "containerId": "f1ae8cda-0e95-451d-bea0-71326abee01d",
+            "name": "Update task",
+            "url": "{{base_url}}/tasks/1",
+            "method": "PUT",
+            "sortNum": 60000,
+            "created": "2026-11-16T18:52:21.100Z",
+            "modified": "2026-11-16T18:52:21.100Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": [
+                    "{",
+                    "  // \"title\":\"\",",
+                    "  // \"description\":\"ops\",",
+                    "  \"done\": true",
+                    "}"
+                ],
+                "form": []
+            },
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{token}}"
+            }
+        },
+        {
+            "_id": "98ef2f50-48b8-4f7b-8023-b743bd582567",
+            "colId": "101c7b51-f2cf-408c-a5eb-f020b0dfb4ca",
+            "containerId": "f1ae8cda-0e95-451d-bea0-71326abee01d",
+            "name": "Delete task",
+            "url": "{{base_url}}/tasks/7",
+            "method": "DELETE",
+            "sortNum": 70000,
+            "created": "2026-11-16T18:57:45.123Z",
+            "modified": "2026-11-16T18:57:45.123Z",
+            "headers": [],
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{token}}"
+            }
+        }
+    ],
+    "ref": "RnxltAqwnlPct5BX7M4xKml8UiMRjL4tqHAoNAX9TOatSuwXvJYpWYl7C2aryXzo3Hf6yEIRcQ4kguW2JoigGA"
+}
